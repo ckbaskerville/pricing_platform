@@ -1,281 +1,325 @@
 import tkinter as tk
 from tkinter import ttk
-GLASS_SHEET_SIZE = 1220*914
-GLASS_SHEET_JUMBO_SHEET_SIZE = 1680*1040
-MOUNTBOARD_STANDARD_SHEET_SIZE = 1200*815
-MOUNTBOARD_JUMBO_SHEET_SIZE = 1525*1016
-FOAM_BOARD_SHEET_SIZE = 1016*762
-FOAM_BOARD_JUMBO_SHEET_SIZE = 1525*1016
-STANDARD_GLASS_SHEET_PRICE = 10.50
-JUMBO_GLASS_SHEET_PRICE = 18.67 * 2
-AR70_GLASS_STANDARD_SHEET = (42.00 + 8.00) * 2
-AR70_GLASS_MM2 = AR70_GLASS_STANDARD_SHEET / GLASS_SHEET_SIZE
-AR92_GLASS_STANDARD_SHEET = (68.88 + 10.00) * 2
-AR92_GLASS_MM2 = AR92_GLASS_STANDARD_SHEET / GLASS_SHEET_SIZE
-AR99_GLASS_STANDARD_SHEET = (88.65 + 12.00) * 2
-AR99_GLASS_MM2 = AR99_GLASS_STANDARD_SHEET / GLASS_SHEET_SIZE
-MOULDING_0056LI_M = 7.26
-MOULDING_2651BK_M = 13.84
-F1_M = 1.66 * 2
-F2_M = 1.50 * 2
-F3_M = 1.61 * 2
-FOAMBOARD_3MM_STANDARD = 6.66 * 2 / FOAM_BOARD_SHEET_SIZE
-FOAMBOARD_5MM_STANDARD = 7.24 * 2 / FOAM_BOARD_SHEET_SIZE
-FOAMBOARD_10MM_STANDARD = 12.42 * 2 / FOAM_BOARD_SHEET_SIZE
-FOAMBOARD_3MM_JUMBO = 12.59 * 2 / FOAM_BOARD_JUMBO_SHEET_SIZE
-FOAMBOARD_5MM_JUMBO = 16.83 * 2 / FOAM_BOARD_JUMBO_SHEET_SIZE
-MOUNTBOARD_STANDARD_SHEET_PRICE = 8.61 * 2
-MOUNTBOARD_JUMBO_SHEET_PRICE = 16.10 * 2
-MDF_STANDARD_SHEET_SIZE = 1220 * 914
-MDF_STANDARD_SHEET_PRICE = 2.61 * 2
-MDF_JUMBO_SHEET_SIZE = 1830 * 1220
-MDF_JUMBO_SHEET_PRICE = 8.83 * 2
+import json
 
+MATERIALS_FILE_PATH = r"C:\Users\ckbas\pricing_platform\pricing_platform\materials.json"
+
+def calc_sheet_area(size: str):
+    dims = size.split("x")
+    return float(dims[0]) * float(dims[1])
+
+
+def save_new_moulding():
+    if moulding_type_var.get() != "" and moulding_price_var.get() != "":
+        materials['moulding_type'][moulding_type_var.get()] = float(moulding_price_var.get())
+
+        with open(MATERIALS_FILE_PATH, "w") as f:
+            json.dump(materials, f, indent=4)
+
+
+def show_entry(event):
+    if moulding_type_var.get() == "Custom":
+        custom_material_name_label.grid(row=1, column=0)
+        custom_material_name_entry.grid(row=1, column=1)
+        moulding_price_label.grid(row=2, column=0)
+        moulding_price_entry.grid(row=2, column=1)
+        save_custom_moulding_button.grid(row=3, column=1)
+    else:
+        custom_material_name_label.grid_forget()
+        custom_material_name_entry.grid_forget()
+        moulding_price_entry.grid_forget()
+        moulding_price_label.grid_forget()
+        save_custom_moulding_button.grid_forget()
+
+
+def calculate_glass_price(glass_long_side,
+                          glass_short_side,
+                          area_mm2,
+                          glass_type):
+    # Calculate glass price based on glass type
+
+    if glass_long_side > 1120 or glass_short_side > 914:
+        glass_price = (materials['glass']['jumbo_types']['jumbo']
+                       / calc_sheet_area(materials['glass']['sizes']['jumbo']) * area_mm2)
+    else:
+        glass_price = (materials['glass']['standard_types'][glass_type]
+                       / calc_sheet_area(materials['glass']['sizes']['standard']) * area_mm2)
+
+    return glass_price
 
 
 def calculate_price():
-    # Get user input
-    glass_long_side = float(long_side_entry.get())
-    glass_short_side = float(short_side_entry.get())
-    area_mm2 = glass_long_side * glass_short_side
-    total_hours = float(hours_entry.get())
+    with open(MATERIALS_FILE_PATH) as f:
+        materials = json.load(f)
+    long_side = float(long_side_entry.get())
+    short_side = float(short_side_entry.get())
 
-    # Get selected glass type
-    glass_type = glass_type_var.get()
+    perimeter_m = 2 * (long_side + short_side) / 1000
+    area_mm2 = long_side * short_side
 
-    # Calculate glass price based on glass type
-    if glass_type == "Standard":
-        if glass_long_side > 1120 or glass_short_side > 914:
-            glass_price = JUMBO_GLASS_SHEET_PRICE / GLASS_SHEET_JUMBO_SHEET_SIZE * area_mm2
-        else:
-            glass_price = STANDARD_GLASS_SHEET_PRICE / GLASS_SHEET_SIZE * area_mm2
-    elif glass_type == "AR70":
-        glass_price = AR70_GLASS_MM2 * area_mm2
-    elif glass_type == "AR92":
-        glass_price = AR92_GLASS_MM2 * area_mm2
-    elif glass_type == "AR99":
-        glass_price = AR99_GLASS_MM2 * area_mm2
-    else:
-        glass_price = 0.00  # Default to 0 if glass type is not recognized
+    # Calculate total glass price
+    glass_total_price = calculate_glass_price(long_side,
+                                              short_side,
+                                              area_mm2,
+                                              glass_type_var.get())
 
+    # Calculate total moulding price
     moulding_type = moulding_type_var.get()
 
-    if moulding_type == "0056LI":
-        moulding_total_price = MOULDING_0056LI_M * (2*(glass_long_side + glass_short_side) / 1000)
-    elif moulding_type == "2651BK":
-        moulding_total_price = MOULDING_2651BK_M * (2*(glass_long_side + glass_short_side) / 1000)
+    if moulding_type == "Custom":
+        moulding_total_price = float(moulding_price_entry.get()) * perimeter_m
     else:
-        moulding_total_price = float(moulding_price_var_entry.get()) * (2*(glass_long_side + glass_short_side) / 1000)
+        moulding_total_price = materials['moulding_type'][moulding_type] * perimeter_m
 
-
-    if glass_long_side > 1200 or glass_short_side > 815:
-        mount_board_unit_price = MOUNTBOARD_STANDARD_SHEET_PRICE / MOUNTBOARD_STANDARD_SHEET_SIZE
+    # Calculate total mount board price
+    if long_side > 1200 or short_side > 815:
+        mountboard_total_price = materials['mountboard']['jumbo']['price'] / calc_sheet_area(
+            materials['mountboard']['jumbo']['size']) * area_mm2
     else:
-        mount_board_unit_price = MOUNTBOARD_JUMBO_SHEET_PRICE / MOUNTBOARD_JUMBO_SHEET_SIZE
+        mountboard_total_price = materials['mountboard']['standard']['price'] / calc_sheet_area(
+            materials['mountboard']['standard']['size']) * area_mm2
 
+    if box_frame_checkbox_var.get() == 1:
 
-    if foamboard_type_var.get() == "3mm":
-        if glass_long_side > 1016 or glass_short_side > 762:
-            foam_board_price = FOAMBOARD_3MM_JUMBO
+        # Calculate total foam board price
+        if long_side > 1016 or short_side > 762:
+            foamboard_total_price = materials['foamboard']['jumbo'][foamboard_type_var.get()] / calc_sheet_area(
+                materials['foamboard']['jumbo']['size']) * area_mm2
         else:
-            foam_board_price = FOAMBOARD_3MM_STANDARD
-    elif foamboard_type_var.get() == "5mm":
-        if glass_long_side > 1016 or glass_short_side > 762:
-            foam_board_price = FOAMBOARD_5MM_JUMBO
-        else:
-            foam_board_price = FOAMBOARD_5MM_STANDARD
-    elif foamboard_type_var.get() == "10mm":
-        foam_board_price = FOAMBOARD_10MM_STANDARD
+            foamboard_total_price = materials['foamboard']['standard'][foamboard_type_var.get()] / calc_sheet_area(
+                materials['foamboard']['standard']['size']) * area_mm2
+
+        # Calculate fillets total price
+        fillets_total_price = perimeter_m * materials['fillets'][fillet_type_var.get()]
+
     else:
-        foam_board_price = 0.00
+        foamboard_total_price = 0.00
+        fillets_total_price = 0.00
 
-    hourly_rate = 40.00  # Replace with actual hourly rate
-
-
-    glass_total_price = glass_price 
-
-    if glass_long_side > 1220 or glass_short_side > 914:
-        mdf_total_price = area_mm2  * (MDF_JUMBO_SHEET_PRICE / MDF_JUMBO_SHEET_SIZE)
+    # Calculate mdf total price
+    if long_side > 1220 or short_side > 914:
+        mdf_total_price = area_mm2 * (
+                materials['mdf']['jumbo']['price'] / calc_sheet_area(materials['mdf']['jumbo']['size']))
     else:
-        mdf_total_price = area_mm2  * (MDF_STANDARD_SHEET_PRICE / MDF_STANDARD_SHEET_SIZE)
+        mdf_total_price = area_mm2 * (
+                materials['mdf']['standard']['price'] / calc_sheet_area(materials['mdf']['standard']['size']))
 
-    if fillet_type_var.get() == "F1":
-        fillets_total_price = (2*(glass_long_side + glass_short_side) / 1000) * F1_M
-    elif fillet_type_var.get() == "F2":
-        fillets_total_price = (2*(glass_long_side + glass_short_side) / 1000) * F2_M
-    elif fillet_type_var.get() == "F3":
-        fillets_total_price = (2*(glass_long_side + glass_short_side) / 1000) * F3_M
-
-    mount_board_total_price = area_mm2 * mount_board_unit_price
-    foam_board_total_price = (glass_long_side * glass_short_side) * foam_board_price
-    labour_total_price = hourly_rate * total_hours
-    
+    # Calculate total labour price
+    hourly_rate = 40.00
+    total_hours = float(hours_entry.get())
+    total_labour_price = hourly_rate * total_hours
 
     if tray_frame_checkbox_var.get() == 1:
-        total_price = moulding_total_price + labour_total_price
+        total_price = moulding_total_price + total_labour_price
     elif box_frame_checkbox_var.get() == 1:
-        total_price = glass_total_price + mdf_total_price + moulding_total_price + mount_board_total_price + fillets_total_price + foam_board_total_price + labour_total_price
-        glass_label.config(text=f"Glass Price: £{glass_total_price:.2f}")
-        mdf_label.config(text=f"MDF Price: £{mdf_total_price:.2f}")
-        mountboard_label.config(text=f"Mountboard Price: £{mount_board_total_price:.2f}")
-        fillets_label.config(text=f"Fillets Price: £{fillets_total_price:.2f}")
-        foamboard_label.config(text=f"Foamboard Price: £{foam_board_total_price:.2f}")
+        total_price = (glass_total_price
+                       + mdf_total_price
+                       + moulding_total_price
+                       + mountboard_total_price
+                       + fillets_total_price
+                       + foamboard_total_price
+                       + total_labour_price)
     else:
-        total_price = glass_total_price + mdf_total_price + moulding_total_price + mount_board_total_price + labour_total_price
-        glass_label.config(text=f"Glass Price: £{glass_total_price:.2f}")
-        mdf_label.config(text=f"MDF Price: £{mdf_total_price:.2f}")
-        mountboard_label.config(text=f"Mountboard Price: £{mount_board_total_price:.2f}")
-    # Display the result
-    
-    moulding_label.config(text=f"Moulding Price: £{moulding_total_price:.2f}")
-    
-    labour_label.config(text=f"Labour Price: £{labour_total_price:.2f}")
-    result_label.config(text=f"Total Price: £{total_price:.2f}")
+        total_price = (glass_total_price
+                       + mdf_total_price
+                       + moulding_total_price
+                       + mountboard_total_price
+                       + total_labour_price)
 
-# Create the main window
-window = tk.Tk()
-window.title("Material Price Calculator")
-window.geometry("800x600")
-
-
-# Create input labels and entry fields
-long_side_label = tk.Label(window, text="Glass Long Side (mm):")
-long_side_label.grid(row=0, column=0)
-long_side_entry = tk.Entry(window)
-long_side_entry.grid(row=0, column=1)
-
-short_side_label = tk.Label(window, text="Glass Short Side (mm):")
-short_side_label.grid(row=1, column=0)
-short_side_entry = tk.Entry(window)
-short_side_entry.grid(row=1, column=1)
-
-hours_label = tk.Label(window, text="Total Hours:")
-hours_label.grid(row=2, column=0)
-hours_entry = tk.Entry(window)
-hours_entry.grid(row=2, column=1)
-
-glass_type_label = tk.Label(window, text="Glass Type:")
-glass_type_label.grid(row=3, column=0)
-
-glass_type_var = tk.StringVar(window)
-glass_type_var.set("Standard")  # Set default value
-
-glass_type_options = ["Standard", "AR70", "AR92", "AR99"]  # Replace with actual glass types
-
-glass_type_dropdown = tk.OptionMenu(window, glass_type_var, *glass_type_options)
-glass_type_dropdown.configure(width=10)
-glass_type_dropdown.grid(row=3, column=1)
-
-# def enable_moulding_type_dropdown():
-#     if enable_moulding_type_dropdown_bool.get():
-#         moulding_type_dropdown.configure(state="normal")
-#         moulding_price_var_entry.configure(state="disabled")
-#     else:
-#         moulding_type_dropdown.configure(state="disabled")
-#         moulding_price_var_entry.configure(state="normal")
+    paint_output_frame(glass_total_price,
+                       mdf_total_price,
+                       mountboard_total_price,
+                       fillets_total_price,
+                       foamboard_total_price,
+                       moulding_total_price,
+                       total_labour_price,
+                       total_price)
 
 
+def paint_output_frame(glass_total_price,
+                       mdf_total_price,
+                       mount_board_total_price,
+                       fillets_total_price,
+                       foam_board_total_price,
+                       moulding_total_price,
+                       labour_total_price,
+                       total_price):
+    for widget in output_frame.winfo_children():
+        widget.destroy()
+    output_frame.config(width=180, height=400, bg='#aaaaaa')
+    if tray_frame_checkbox_var.get() == 0:
+        glass_label = tk.Label(output_frame, text=f"Glass Price: £{glass_total_price:.2f}", bg='#aaaaaa')
+        glass_label.grid(row=0, column=0)
+        mdf_label = tk.Label(output_frame, text=f"MDF Price: £{mdf_total_price:.2f}", bg='#aaaaaa')
+        mdf_label.grid(row=1, column=0)
+        mountboard_label = tk.Label(output_frame, text=f"Mountboard Price: £{mount_board_total_price:.2f}", bg='#aaaaaa')
+        mountboard_label.grid(row=2, column=0)
+        if box_frame_checkbox_var.get() == 1:
+            foamboard_label = tk.Label(output_frame, text=f"Foamboard Price: £{foam_board_total_price:.2f}", bg='#aaaaaa')
+            foamboard_label.grid(row=3, column=0)
+            fillets_label = tk.Label(output_frame, text=f"Fillets Price: £{fillets_total_price:.2f}", bg='#aaaaaa')
+            fillets_label.grid(row=4, column=0)
+    moulding_label = tk.Label(output_frame, text=f"Moulding Price: £{moulding_total_price:.2f}", bg='#aaaaaa')
+    moulding_label.grid(row=5, column=0)
+    labour_label = tk.Label(output_frame, text=f"Labour Price: £{labour_total_price:.2f}", bg='#aaaaaa')
+    labour_label.grid(row=6, column=0)
+    # Create label to display the result
+    result_label = tk.Label(output_frame, text=f"Total Price: £{total_price:.2f}", bg='#aaaaaa')
+    result_label.grid(row=7, column=0)
+    result_label.config(font=('bold'))
 
-# enable_moulding_type_dropdown_bool = tk.BooleanVar()
-# moulding_type_radiobutton = tk.Radiobutton(window, text="Dropdown", variable=enable_moulding_type_dropdown, value=True, command=enable_moulding_type_dropdown, state="normal")
-# moulding_price_radiobutton = tk.Radiobutton(window, text="Custom", variable=enable_moulding_type_dropdown, value=False, command=enable_moulding_type_dropdown, state="active")
-# moulding_type_radiobutton.pack()
-# moulding_price_radiobutton.pack()
-
-
-moulding_type_label = tk.Label(window, text="Moulding Type:")
-moulding_type_label.grid(row=4, column=0)
-
-moulding_type_var = tk.StringVar(window)
-
-moulding_type_options = ["0056LI", "2651BK"]  # Replace with actual glass types
-
-moulding_type_dropdown = tk.OptionMenu(window, moulding_type_var, *moulding_type_options)
-moulding_type_dropdown.configure(width=10)
-moulding_type_dropdown.grid(row=4, column=1)
-
-moulding_price_label = tk.Label(window, text="Moulding Price per metre:")
-moulding_price_label.grid(row=4, column=2)
-
-moulding_price_var_entry = tk.Entry(window)  # Set default value
-moulding_price_var_entry.grid(row=4, column=3)
-
-moulding_price_options = ["Dropdown", "Custom"]
-
-
-
-
-tray_frame_label = tk.Label(window, text="Tray Frame:")
-tray_frame_label.grid(row=5, column=0)
-tray_frame_checkbox_var = tk.IntVar()
-tray_frame_checkbox = tk.Checkbutton(window, variable=tray_frame_checkbox_var)
-tray_frame_checkbox.grid(row=5, column=1)
-
-
-box_frame_label = tk.Label(window, text="Box Frame:")
-box_frame_label.grid(row=5, column=3)
-box_frame_checkbox_var = tk.IntVar()
-box_frame_checkbox = tk.Checkbutton(window, variable=box_frame_checkbox_var)
-box_frame_checkbox.grid(row=5, column=4)
-
-fillet_type_label = tk.Label(window, text="Fillet Type:")
-fillet_type_label.grid(row=6, column=3)
-
-fillet_type_var = tk.StringVar(window)
-fillet_type_options = ["F1", "F2", "F3"]
-
-fillet_type_dropdown = tk.OptionMenu(window, fillet_type_var, *fillet_type_options)
-fillet_type_dropdown.configure(width=10)
-fillet_type_dropdown.configure(state="disabled")
-fillet_type_dropdown.grid(row=6, column=4)
-
-foamboard_type_label = tk.Label(window, text="Foamboard Type:")
-foamboard_type_label.grid(row=7, column=3)
-
-foamboard_type_var = tk.StringVar(window)
-foamboard_type_options = ["3mm", "5mm", "10mm"]  # Replace with actual foamboard types
-
-foamboard_type_dropdown = tk.OptionMenu(window, foamboard_type_var, *foamboard_type_options)
-foamboard_type_dropdown.configure(width=10)
-foamboard_type_dropdown.configure(state="disabled")
-foamboard_type_dropdown.grid(row=7, column=4)
 
 def enable_fillet_and_foamboard_type_dropdown():
     if box_frame_checkbox_var.get() == 1:
-        fillet_type_dropdown.configure(state="normal")
-        foamboard_type_dropdown.configure(state="normal")
+        fillet_type_combobox.configure(state="normal")
+        foamboard_type_combobox.configure(state="normal")
     else:
-        fillet_type_dropdown.configure(state="disabled")
-        fillets_label.config(text="")
-        foamboard_type_dropdown.configure(state="disabled")
-        foamboard_label.config(text="")
+        fillet_type_combobox.configure(state="disabled")
+        foamboard_type_combobox.configure(state="disabled")
+
+
+def apply_dark_theme(widget, dark_bg, dark_fg):
+    if isinstance(widget, tk.Frame):
+        widget.config(bg=dark_bg)
+    elif isinstance(widget, tk.Checkbutton):
+        widget.config(bg=dark_bg)
+    elif not isinstance(widget, tk.Entry):
+        widget.config(bg=dark_bg, fg=dark_fg)
+
+    for child in widget.winfo_children():
+        apply_dark_theme(child, dark_bg, dark_fg)
+
+def deselect_tray_frame(event):
+    tray_frame_checkbox_var.set(0)
+
+def deselect_box_frame():
+    box_frame_checkbox_var.set(0)
+
+
+with open(MATERIALS_FILE_PATH) as f:
+    materials = json.load(f)
+
+# Create the main window
+window = tk.Tk()
+dark_bg = '#2d2d2d'
+dark_fg = '#ffffff'
+
+window.title("Livingstone Studios Quote Calculator")
+window.option_add("*Font", "Verdana 10")
+
+window.config(bg=dark_bg)
+
+input_frame = tk.Frame(window, width=600, height=400)
+input_frame.pack(side=tk.LEFT, fill=tk.X, expand=True, anchor=tk.CENTER, padx=10, pady=10)
+
+glass_frame = tk.Frame(input_frame, width=590, height=100)
+glass_frame.grid(row=0, column=0, padx=5, pady=5)
+
+moulding_frame = tk.Frame(input_frame, width=590, height=100)
+moulding_frame.grid(row=1, column=0, padx=5, pady=5)
+
+frame_type_frame = tk.Frame(input_frame, width=590, height=100)
+frame_type_frame.grid(row=2, column=0, padx=5, pady=5)
+
+calculate_frame = tk.Frame(input_frame, width=590, height=100)
+calculate_frame.grid(row=3, column=0, padx=5, pady=5)
+
+# Create input labels and entry fields
+long_side_label = tk.Label(glass_frame, text="Glass Long Side (mm):")
+long_side_label.grid(row=0, column=0, sticky=tk.E)
+long_side_entry = tk.Entry(glass_frame)
+long_side_entry.grid(row=0, column=1)
+long_side_entry.config(width=15)
+
+short_side_label = tk.Label(glass_frame, text="Glass Short Side (mm):")
+short_side_label.grid(row=1, column=0, sticky=tk.E)
+short_side_entry = tk.Entry(glass_frame)
+short_side_entry.grid(row=1, column=1)
+short_side_entry.config(width=15)
+
+glass_type_label = tk.Label(glass_frame, text="Glass Type:")
+glass_type_label.grid(row=2, column=0)
+
+glass_type_var = tk.StringVar(glass_frame)
+glass_type_var.set("Standard")
+glass_type_options = list(materials['glass']['standard_types'].keys())
+glass_type_combobox = ttk.Combobox(glass_frame, values=glass_type_options, textvariable=glass_type_var)
+glass_type_combobox.current(0)  # set the default selected item
+glass_type_combobox.config(width=10)
+glass_type_combobox.grid(row=2, column=1, columnspan=1)
+
+moulding_type_label = tk.Label(moulding_frame, text="Moulding Type:")
+moulding_type_label.grid(row=0, column=0)
+
+moulding_type_var = tk.StringVar(moulding_frame)
+moulding_type_options = list(materials['moulding_type'].keys())
+moulding_type_options.append("Custom")
+
+moulding_type_combobox = ttk.Combobox(moulding_frame, textvariable=moulding_type_var, values=moulding_type_options)
+moulding_type_combobox.grid(row=0, column=1)
+moulding_type_combobox.bind("<<ComboboxSelected>>", show_entry)
+custom_material_name_label = tk.Label(moulding_frame, text="Custom Material Name:")
+# glass_type_combobox.config(width)
+
+custom_material_name_var = tk.StringVar(moulding_frame)
+custom_material_name_entry = tk.Entry(moulding_frame, textvariable=custom_material_name_var)
+
+moulding_price_label = tk.Label(moulding_frame, text="Moulding Price:")
+
+moulding_price_var = tk.StringVar(moulding_frame)
+moulding_price_entry = tk.Entry(moulding_frame, textvariable=moulding_price_var)
+
+# BUTTON TO SAVE CUSTOM MOULDING
+save_custom_moulding_button = tk.Button(moulding_frame, text="Save", command=save_new_moulding)
+
+tray_frame_label = tk.Label(frame_type_frame, text="Tray Frame:")
+tray_frame_label.grid(row=0, column=0)
+tray_frame_checkbox_var = tk.IntVar()
+tray_frame_checkbox = tk.Checkbutton(frame_type_frame, variable=tray_frame_checkbox_var)
+tray_frame_checkbox.grid(row=0, column=1)
+
+box_frame_label = tk.Label(frame_type_frame, text="Box Frame:")
+box_frame_label.grid(row=1, column=0)
+box_frame_checkbox_var = tk.IntVar()
+box_frame_checkbox = tk.Checkbutton(frame_type_frame, variable=box_frame_checkbox_var)
+box_frame_checkbox.grid(row=1, column=1)
+
+fillet_type_label = tk.Label(frame_type_frame, text="Fillet Type:")
+fillet_type_label.grid(row=2, column=0)
+
+fillet_type_var = tk.StringVar(frame_type_frame)
+fillet_type_options = list(materials['fillets'].keys())
+
+fillet_type_combobox = ttk.Combobox(frame_type_frame, textvariable=fillet_type_var, values=fillet_type_options)
+fillet_type_combobox.configure(width=10)
+fillet_type_combobox.configure(state="disabled")
+fillet_type_combobox.grid(row=2, column=1)
+
+foamboard_type_label = tk.Label(frame_type_frame, text="Foamboard Type:")
+foamboard_type_label.grid(row=3, column=0)
+
+foamboard_type_var = tk.StringVar(frame_type_frame)
+foamboard_type_options = ["3mm", "5mm", "10mm"]  # Replace with actual foamboard types
+
+foamboard_type_combobox = ttk.Combobox(frame_type_frame, textvariable=foamboard_type_var, values=foamboard_type_options)
+foamboard_type_combobox.configure(width=10)
+foamboard_type_combobox.configure(state="disabled")
+foamboard_type_combobox.grid(row=3, column=1)
 
 box_frame_checkbox.configure(command=enable_fillet_and_foamboard_type_dropdown)
 
-
-
-
+hours_label = tk.Label(calculate_frame, text="Total Hours:")
+hours_label.grid(row=0, column=0)
+hours_entry = tk.Entry(calculate_frame)
+hours_entry.grid(row=0, column=1)
 # Create calculate button
-calculate_button = tk.Button(window, text="Calculate", command=calculate_price)
-calculate_button.grid(row=8, column=0)
+calculate_button = tk.Button(calculate_frame, text="Calculate", command=calculate_price)
+calculate_button.grid(row=1, column=1)
 
-glass_label = tk.Label(window, text="")
-glass_label.grid(row=9, column=0)
-moulding_label = tk.Label(window, text="")
-moulding_label.grid(row=10, column=0)
-mdf_label = tk.Label(window, text="")
-mdf_label.grid(row=11, column=0)
-mountboard_label = tk.Label(window, text="")
-mountboard_label.grid(row=12, column=0)
-foamboard_label = tk.Label(window, text="")
-foamboard_label.grid(row=13, column=0)
-fillets_label = tk.Label(window, text="")
-fillets_label.grid(row=14, column=0)
-labour_label = tk.Label(window, text="")
-labour_label.grid(row=15, column=0)
-# Create label to display the result
-result_label = tk.Label(window, text="")
-result_label.grid(row=16, column=0)
+apply_dark_theme(input_frame, dark_bg, dark_fg)
+
+output_frame = tk.Frame(window, width=180, height=400, bg='#aaaaaa')
+output_frame.pack(side=tk.RIGHT, fill=tk.X, expand=True, anchor=tk.CENTER, padx=10, pady=10)
 
 # Start the main event loop
 window.mainloop()

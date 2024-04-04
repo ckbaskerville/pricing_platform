@@ -1,0 +1,61 @@
+{
+    "glass": {
+        "sizes": {
+            "standard": "1220x914",
+            "jumbo": "1680x1040"
+        },
+        "standard_types": {
+            "Standard": 12.6,
+            "AR70": 100.0,
+            "AR92": 157.76,
+            "AR99": 201.3
+        },
+        "jumbo_types": {
+            "jumbo": 37.34
+        }
+    },
+    "moulding_type": {
+        "0056LI": 7.26,
+        "2651BK": 13.84,
+        "FE4": 13.5,
+        "BD3": 3.2
+    },
+    "mountboard": {
+        "standard": {
+            "size": "1200x815",
+            "price": 20.66
+        },
+        "jumbo": {
+            "size": "1525x1016",
+            "price": 38.64
+        }
+    },
+    "foamboard": {
+        "standard": {
+            "size": "1016x762",
+            "3mm": 15.98,
+            "5mm": 17.38,
+            "10mm": 29.81
+        },
+        "jumbo": {
+            "size": "1525x1016",
+            "3mm": 30.22,
+            "5mm": 40.39
+        }
+    },
+    "mdf": {
+        "standard": {
+            "size": "1220x914",
+            "price": 6.26
+        },
+        "jumbo": {
+            "size": "1830x1220",
+            "price": 21.19
+        }
+    },
+    "fillets": {
+        "F1": 3.32,
+        "F2": 3.0,
+        "F3": 3.22
+    }
+}
