@@ -19,11 +19,11 @@ def save_new_moulding():
 
 def show_entry(event):
     if moulding_type_var.get() == "Custom":
-        custom_material_name_label.grid(row=1, column=0)
-        custom_material_name_entry.grid(row=1, column=1)
-        moulding_price_label.grid(row=2, column=0)
-        moulding_price_entry.grid(row=2, column=1)
-        save_custom_moulding_button.grid(row=3, column=1)
+        custom_material_name_label.grid(row=1, column=0, pady=5)
+        custom_material_name_entry.grid(row=1, column=1, pady=5)
+        moulding_price_label.grid(row=2, column=0, pady=5)
+        moulding_price_entry.grid(row=2, column=1, pady=5)
+        save_custom_moulding_button.grid(row=3, column=1, pady=5)
     else:
         custom_material_name_label.grid_forget()
         custom_material_name_entry.grid_forget()
@@ -226,19 +226,19 @@ calculate_frame.grid(row=3, column=0, padx=5, pady=5)
 
 # Create input labels and entry fields
 long_side_label = tk.Label(glass_frame, text="Glass Long Side (mm):")
-long_side_label.grid(row=0, column=0, sticky=tk.E)
+long_side_label.grid(row=0, column=0, sticky=tk.E, pady=5)
 long_side_entry = tk.Entry(glass_frame)
-long_side_entry.grid(row=0, column=1)
+long_side_entry.grid(row=0, column=1, pady=5)
 long_side_entry.config(width=15)
 
 short_side_label = tk.Label(glass_frame, text="Glass Short Side (mm):")
-short_side_label.grid(row=1, column=0, sticky=tk.E)
+short_side_label.grid(row=1, column=0, sticky=tk.E, pady=5)
 short_side_entry = tk.Entry(glass_frame)
-short_side_entry.grid(row=1, column=1)
+short_side_entry.grid(row=1, column=1, pady=5)
 short_side_entry.config(width=15)
 
 glass_type_label = tk.Label(glass_frame, text="Glass Type:")
-glass_type_label.grid(row=2, column=0)
+glass_type_label.grid(row=2, column=0, pady=5)
 
 glass_type_var = tk.StringVar(glass_frame)
 glass_type_var.set("Standard")
@@ -246,17 +246,17 @@ glass_type_options = list(materials['glass']['standard_types'].keys())
 glass_type_combobox = ttk.Combobox(glass_frame, values=glass_type_options, textvariable=glass_type_var)
 glass_type_combobox.current(0)  # set the default selected item
 glass_type_combobox.config(width=10)
-glass_type_combobox.grid(row=2, column=1, columnspan=1)
+glass_type_combobox.grid(row=2, column=1, columnspan=1, pady=5)
 
 moulding_type_label = tk.Label(moulding_frame, text="Moulding Type:")
-moulding_type_label.grid(row=0, column=0)
+moulding_type_label.grid(row=0, column=0, pady=5)
 
 moulding_type_var = tk.StringVar(moulding_frame)
 moulding_type_options = list(materials['moulding_type'].keys())
 moulding_type_options.append("Custom")
 
 moulding_type_combobox = ttk.Combobox(moulding_frame, textvariable=moulding_type_var, values=moulding_type_options)
-moulding_type_combobox.grid(row=0, column=1)
+moulding_type_combobox.grid(row=0, column=1, pady=5)
 moulding_type_combobox.bind("<<ComboboxSelected>>", show_entry)
 custom_material_name_label = tk.Label(moulding_frame, text="Custom Material Name:")
 # glass_type_combobox.config(width)
@@ -273,19 +273,19 @@ moulding_price_entry = tk.Entry(moulding_frame, textvariable=moulding_price_var)
 save_custom_moulding_button = tk.Button(moulding_frame, text="Save", command=save_new_moulding)
 
 tray_frame_label = tk.Label(frame_type_frame, text="Tray Frame:")
-tray_frame_label.grid(row=0, column=0)
+tray_frame_label.grid(row=0, column=0, pady=5)
 tray_frame_checkbox_var = tk.IntVar()
 tray_frame_checkbox = tk.Checkbutton(frame_type_frame, variable=tray_frame_checkbox_var)
-tray_frame_checkbox.grid(row=0, column=1)
+tray_frame_checkbox.grid(row=0, column=1, pady=5)
 
 box_frame_label = tk.Label(frame_type_frame, text="Box Frame:")
-box_frame_label.grid(row=1, column=0)
+box_frame_label.grid(row=1, column=0, pady=5)
 box_frame_checkbox_var = tk.IntVar()
 box_frame_checkbox = tk.Checkbutton(frame_type_frame, variable=box_frame_checkbox_var)
-box_frame_checkbox.grid(row=1, column=1)
+box_frame_checkbox.grid(row=1, column=1, pady=5)
 
 fillet_type_label = tk.Label(frame_type_frame, text="Fillet Type:")
-fillet_type_label.grid(row=2, column=0)
+fillet_type_label.grid(row=2, column=0, pady=5)
 
 fillet_type_var = tk.StringVar(frame_type_frame)
 fillet_type_options = list(materials['fillets'].keys())
@@ -293,10 +293,10 @@ fillet_type_options = list(materials['fillets'].keys())
 fillet_type_combobox = ttk.Combobox(frame_type_frame, textvariable=fillet_type_var, values=fillet_type_options)
 fillet_type_combobox.configure(width=10)
 fillet_type_combobox.configure(state="disabled")
-fillet_type_combobox.grid(row=2, column=1)
+fillet_type_combobox.grid(row=2, column=1, pady=5)
 
 foamboard_type_label = tk.Label(frame_type_frame, text="Foamboard Type:")
-foamboard_type_label.grid(row=3, column=0)
+foamboard_type_label.grid(row=3, column=0, pady=5)
 
 foamboard_type_var = tk.StringVar(frame_type_frame)
 foamboard_type_options = ["3mm", "5mm", "10mm"]  # Replace with actual foamboard types
@@ -304,17 +304,17 @@ foamboard_type_options = ["3mm", "5mm", "10mm"]  # Replace with actual foamboard
 foamboard_type_combobox = ttk.Combobox(frame_type_frame, textvariable=foamboard_type_var, values=foamboard_type_options)
 foamboard_type_combobox.configure(width=10)
 foamboard_type_combobox.configure(state="disabled")
-foamboard_type_combobox.grid(row=3, column=1)
+foamboard_type_combobox.grid(row=3, column=1, pady=5)
 
 box_frame_checkbox.configure(command=enable_fillet_and_foamboard_type_dropdown)
 
 hours_label = tk.Label(calculate_frame, text="Total Hours:")
-hours_label.grid(row=0, column=0)
+hours_label.grid(row=0, column=0, pady=5)
 hours_entry = tk.Entry(calculate_frame)
-hours_entry.grid(row=0, column=1)
+hours_entry.grid(row=0, column=1, pady=5)
 # Create calculate button
 calculate_button = tk.Button(calculate_frame, text="Calculate", command=calculate_price)
-calculate_button.grid(row=1, column=1)
+calculate_button.grid(row=1, column=1, pady=5)
 
 apply_dark_theme(input_frame, dark_bg, dark_fg)
 
