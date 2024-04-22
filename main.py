@@ -4,14 +4,15 @@ import json
 
 MATERIALS_FILE_PATH = r"C:\Users\ckbas\pricing_platform\pricing_platform\materials.json"
 
+
 def calc_sheet_area(size: str):
     dims = size.split("x")
     return float(dims[0]) * float(dims[1])
 
 
 def save_new_moulding():
-    if moulding_type_var.get() != "" and moulding_price_var.get() != "":
-        materials['moulding_type'][moulding_type_var.get()] = float(moulding_price_var.get())
+    if custom_material_name_entry.get() != "" and moulding_price_var.get() != "":
+        materials['moulding_type'][custom_material_name_entry.get()] = float(moulding_price_var.get())
 
         with open(MATERIALS_FILE_PATH, "w") as f:
             json.dump(materials, f, indent=4)
@@ -316,7 +317,7 @@ hours_entry.grid(row=0, column=1, pady=5)
 calculate_button = tk.Button(calculate_frame, text="Calculate", command=calculate_price)
 calculate_button.grid(row=1, column=1, pady=5)
 
-apply_dark_theme(input_frame, dark_bg, dark_fg)
+# apply_dark_theme(input_frame, dark_bg, dark_fg)
 
 output_frame = tk.Frame(window, width=180, height=400, bg='#aaaaaa')
 output_frame.pack(side=tk.RIGHT, fill=tk.X, expand=True, anchor=tk.CENTER, padx=10, pady=10)
